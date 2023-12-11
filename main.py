@@ -7,25 +7,23 @@ from time import sleep
 # Inicialização do pygame
 pygame.init()
 sys.setrecursionlimit(10000)
-FPS = pygame.time.Clock()
 
 
 maze = criar_labirinto('labirintos/maze.txt')
 # Definir as dimensões da janela do jogo
-WIDTH, HEIGHT = 900, 800
+WIDTH, HEIGHT = 1500, 900
 win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Jogo do Labirinto do Rato")
 
 # Cores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
 
 # Tamanho do jogador e posição inicial
 player_size = 50
 player_x = 50
 player_y = 50
+
+# Validação das posições do labirinto
 
 def resolve_labirinto(maze, posicao_jogador, posicao_queijo):
     caminho_visitados = []
@@ -66,8 +64,8 @@ def resolve_labirinto(maze, posicao_jogador, posicao_queijo):
                 last_posicao = caminho_correto.pop()
                 posicao_jogador["linha"], posicao_jogador["coluna"] = last_posicao
             else:
-                print("Não há mais posições no caminho correto. Labirinto insolúvel.")
-                break
+                return False
+                
     return caminho_correto, caminho_visitados
             
             
@@ -90,7 +88,7 @@ def buscar_posicao(maze):
 # Função para desenhar o jogador
 
 def draw_player(x, y):
-    pygame.draw.rect(win, RED, (x, y, player_size, player_size))
+    pygame.draw.rect(win, (x, y, player_size, player_size))
 
 # Função para desenhar o labirinto
 queijo = pygame.image.load("img/queijo.jpg")
@@ -138,14 +136,13 @@ while running:
     
     if coordenadas_path:
         for x, y in coordenadas_path:
-            pygame.draw.rect(win, RED, (x * player_size, y * player_size, player_size, player_size))
+            pygame.draw.rect(win, (x * player_size, y * player_size, player_size, player_size))
             
         for x, y in caminho_errado_path:
-            pygame.draw.rect(win, RED, (x * player_size, y * player_size, player_size, player_size))
+            pygame.draw.rect(win, (x * player_size, y * player_size, player_size, player_size))
             
         player_x, player_y = coordenadas_path.pop(0)
         pygame.display.update()
-        FPS.tick(10)
 
     # Checar se o jogador alcançou a saída
     if player_x == (len(maze[0]) - 1) * player_size and player_y == (len(maze) - 1) * player_size:
@@ -165,8 +162,12 @@ while running:
     draw_maze(maze)
     
     #resolver labirinto
-    caminho_correto, caminho_visitado = resolve_labirinto(maze, posicao_jogador, posicao_queijo)
+    solucao = resolve_labirinto(maze, posicao_jogador, posicao_queijo)
+    if solucao is False:
+        print("Não há mais posições no caminho correto. Labirinto insolúvel.")
+        break
     
+    caminho_correto, caminho_visitado = solucao
     if len(caminho_correto)  > 0 and len(caminho_visitado) > 0:
         for caminho in caminho_correto:
             linha, coluna = caminho
@@ -188,7 +189,6 @@ while running:
 
     # Atualizar a janela
     pygame.display.update()
-    FPS.tick(10)
 
 # Encerrar o pygame
 pygame.quit()
